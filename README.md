@@ -19,27 +19,6 @@ An end-to-end **Extract → Transform → Analyse → Persist** pipeline that co
   - Snapshot diffs: new/missing funds, exposures, holdings.
 - **Archiving**: current-year metrics kept “hot”; prior years frozen under `Hist/`.
 
-## Repository layout (key paths)
-ROOT/
-01_MorningStar/
-01_Daily/
-01_Performance Data/
-02_Volatility Data/TPRD/
-02_Monthly/02_Exposures Data/
-01_THRD/ 02_CVRD/ 03_ESRD/ 04_EGRD/ 05_FIRD/
-Output/
-Performance.csv
-Characteristic.csv
-Holdings.csv
-All_Perf_MetricsYYYY.csv
-All Perf Metrics Hist/
-Reporting Docs/Benchmark_Mapping.xlsx
-Code/
-automation_pipeline.py
-backfill_performance_metrics.py
-performance_analytics.py
-validate_exposure_header_classification.py
-
 ## How it works
 1. **Ingest** vendor CSV/XLSX → tidy long form (robust parsers for dates, “Std Dev”, headers).
 2. **Consolidate** returns + volatility (outer merge), de-dup per feed.

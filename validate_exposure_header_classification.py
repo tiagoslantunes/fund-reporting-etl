@@ -28,20 +28,17 @@ Empirically on 2 July 2025 we observe
 which justifies the heuristic’s adequacy.
 """
 
+import argparse
+import logging
 from pathlib import Path
 import pandas as pd
 
-# the logger from the main pipeline is reused so output ends up in the same log
-try:
-    from __main__ import logger           # when run inside the pipeline
-except ImportError:
-    import logging                        # standalone fallback
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-    logger = logging.getLogger("header-validator")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger("header-validator")
 
 
 def validate_exposure_header_classification(
@@ -89,7 +86,7 @@ def validate_exposure_header_classification(
     raw_headers = sorted(raw_headers)
 
     # Pipe through the heuristic parser 
-    from parse_module import parse_column_name   # import from your code-base
+    from automation_pipeline import parse_column_name
 
     parsed = [parse_column_name(h) for h in raw_headers]
     unknown = [
@@ -118,6 +115,10 @@ def validate_exposure_header_classification(
         )
 
 
-# Example invocation (typically called from the main pipeline right after exposures are parsed, but can also be run on its own for regression tests):
- >>> validate_exposure_header_classification(ROOT)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Validate exposure header classification.")
+    parser.add_argument("--root", type=Path, required=True, help="Project data root.")
+    parser.add_argument("--max-unknown-frac", type=float, default=0.01)
+    args = parser.parse_args()
+    validate_exposure_header_classification(args.root, args.max_unknown_frac)
 

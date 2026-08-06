@@ -32,8 +32,9 @@ retain NA evidence, Pearson-ρ-driven auto-rename controlled at ρ>0.90, etc.).
 # Imports & Configuration 
 from __future__ import annotations  # postpone evaluation of type hints
 
+import argparse                         # command-line configuration
 import logging                          # lightweight structured logging
-import os                               # `chdir` for Excel relative paths
+import os                               # environment-based configuration
 import time                             # high-resolution wall-clock
 import re                               # regex for filename parsing
 from datetime import datetime           # timestamp helpers
@@ -46,23 +47,11 @@ from scipy.stats import pearsonr        # Pearson correlation coefficient
 
 from performance_analytics import PerformanceAnalytics  # g(·) – metric engine
 
-# Define root folder for all data
-ROOT     = Path(r"C:/Users/Utilizador/Documents/PIC/test_data_structure")
-# Code directory under the root
-CODE_DIR = ROOT / "Code"
-# Change current directory so relative links in Excel files still work
-os.chdir(CODE_DIR)
-
 # Logging Setup
-# Create a log file in the Code directory and also print logs to console
-LOG_FILE = CODE_DIR / "automation_process.log"
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.FileHandler(LOG_FILE, "w", "utf-8"),
-        logging.StreamHandler()
-    ],
+    handlers=[logging.StreamHandler()],
     force=True        
 )
 
@@ -653,6 +642,22 @@ def consolidate_code_tables_in_folder(folder: Path) -> pd.DataFrame:
 
 # Main Execution Block: Orchestrates the entire pipeline 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Consolidate Morningstar-style fund files and calculate reporting metrics."
+    )
+    parser.add_argument(
+        "--root",
+        type=Path,
+        default=Path(os.getenv("FUND_REPORTING_ROOT", ".")),
+        help="Project data root. Defaults to FUND_REPORTING_ROOT or the current directory.",
+    )
+    args = parser.parse_args()
+    root = args.root.expanduser().resolve()
+    log_file = root / "automation_process.log"
+    file_handler = logging.FileHandler(log_file, mode="w", encoding="utf-8")
+    file_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+    logger.addHandler(file_handler)
+
     start_ts = time.perf_counter()     # start stopwatch
     try:
         # Generate a run tag (YYYYMMDD) for this session’s snapshots
@@ -660,13 +665,13 @@ if __name__ == "__main__":
         logger.info("Script started – run tag %s", run_tag)
 
         # Define key folders and ensure outputs exist
-        base     = ROOT / "01_MorningStar"
+        base     = root / "01_MorningStar"
         daily    = base / "01_Daily"
         output   = base / "Output"
-        output.mkdir(exist_ok=True)              # create if missing
+        output.mkdir(parents=True, exist_ok=True)  # create if missing
         hist_dir = output / "Hist"
         hist_dir.mkdir(exist_ok=True)            # for previous-run snapshots
-        bm_path  = ROOT / "Reporting Docs" / "Benchmark_Mapping.xlsx"
+        bm_path  = root / "Reporting Docs" / "Benchmark_Mapping.xlsx"
 
         # Locate Performance & Volatility source folders
         perf_root = daily / "01_Performance Data"
@@ -922,4 +927,4 @@ if __name__ == "__main__":
     except Exception:
         # Catch any critical error that aborts the run
         logger.exception("Critical error – run aborted")
-        print("Error – check automation_process.log")
+        print(f"Error – check {log_file}")

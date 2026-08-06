@@ -1,163 +1,122 @@
-# Streamlining Data Reporting Processes
+# Fund Reporting ETL and Analytics
 
-An end-to-end **Extract → Transform → Analyse → Persist** pipeline that consolidates Morningstar data for ~200 investment funds into clean, reproducible datasets and Power BI-ready performance metrics.
+<p align="center">
+  <strong>Turn heterogeneous fund data into auditable, Power BI-ready reporting datasets.</strong><br>
+  Extraction, normalization, risk/return analytics, historical backfills, and validation controls.
+</p>
 
-The pipeline enforces **no look-ahead bias**, automates quality assurance and validation checks, and archives immutable historical records for fully reproducible reporting.
+<p align="center">
+  <a href="https://www.python.org/"><img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white"></a>
+  <a href="https://github.com/tiagoslantunes/Streamlining-Data-Reporting-Processes/actions/workflows/quality.yml"><img alt="Quality checks" src="https://github.com/tiagoslantunes/Streamlining-Data-Reporting-Processes/actions/workflows/quality.yml/badge.svg"></a>
+  <img alt="Output" src="https://img.shields.io/badge/output-Power%20BI%20ready-F2C811?logo=powerbi&logoColor=black">
+</p>
 
----
+This project replaces manual consolidation of performance, volatility, exposure, and holdings files with a reproducible pipeline. It preserves missing-data evidence, enforces no look-ahead in historical metrics, and keeps immutable snapshots for auditability.
 
-## Overview
+> Source files are not included because they may be licensed or confidential. The repository contains the generic processing and validation logic only.
 
-Manual fund reporting is slow, error-prone, and hard to audit. This project replaces those processes with a robust, automated system that:
+## Capabilities
 
-- Ingests multiple heterogeneous Morningstar data feeds (performance, characteristics, holdings)
-- Merges, cleans, and validates data across ~200 instruments
-- Computes a comprehensive set of absolute, benchmark, and relative performance metrics
-- Outputs structured data ready for **Power BI** dashboards and quantitative analysis
+| Stage | What it does |
+|---|---|
+| Extract | Reads heterogeneous CSV/XLSX vendor layouts and flexible dates |
+| Transform | Normalizes identifiers, exposures, holdings, returns, and volatility |
+| Analyse | Calculates absolute, benchmark, and relative performance metrics |
+| Validate | Detects header drift, identity changes, and snapshot differences |
+| Persist | Writes current outputs and immutable historical archives |
 
----
-
-## Architecture
-
-```
-Input (Morningstar Feeds)
-        ↓
-   Extract (automation_pipeline)
-        ↓
-   Transform (merge, clean, validate)
-        ↓
-   Analyse (performance_analytics engine)
-        ↓
-   Persist (snapshots + historical archive)
-```
-
-### Key Scripts
-
-| Script | Responsibility |
-|--------|----------------|
-| `automation_pipeline.py` | Main orchestration — runs the full ETL + analytics process: ingestion, consolidation, snapshotting, metrics calculation, QA checks, and archiving |
-| `performance_analytics.py` | Vectorized NumPy/pandas engine for calculating absolute, benchmark, and relative metrics across multiple time windows |
-| `backfill_performance_metrics.py` | Rebuilds historical performance metric files by backfilling past month-end data to maintain a consistent time-series baseline |
-| `corr_threshold_validation.py` | Detects fund name changes via Pearson correlation (ρ ≥ 0.90) between overlapping return series and automatically merges identities |
-| `validate_exposure_header_classification.py` | Regression test ensuring exposure headers are consistently classified across pipeline runs |
-
----
-
-## Data Flow
-
-### 1. Extraction
-
-**Input feeds:**
-- **Performance** — monthly returns and volatility
-- **Characteristic** — exposures (country, sector, asset class, etc.)
-- **Holdings** — top holdings and weights
-- **`Reporting Docs/Benchmark_Mapping.xlsx`**
-  - *Benchmark* sheet — maps each instrument to up to 3 benchmarks (ordered by priority)
-  - *Output Metric* sheet — preferred feed per instrument (`p` = total return, `m` = market return)
-
-Parsing features in `automation_pipeline.py`:
-- Flexible date handling (YYYY-MM, MM/DD/YYYY, text month names)
-- Column name normalization (e.g., `"Std Dev"` variants)
-- Regex-based header classification for exposure columns
-
-### 2. Transformation
-
-- Outer merge of performance and volatility feeds to ensure completeness
-- Melt and classify exposures and holdings using `parse_column_name()` — categorizes by geography (US vs Non-US), sector, asset class, etc.
-- De-duplication of overlapping vendor records
-
-### 3. Analysis
-
-`performance_analytics.py` computes metrics across configurable time windows (MTD, last month, QTD, YTD, 1Y, 3Y, 5Y, since-2023):
-
-| Category | Metrics |
-|----------|---------|
-| **Absolute** | Cumulative return, annualised volatility, Sharpe ratio, max drawdown, downside deviation, positive-month count |
-| **Benchmark** (up to 3) | Same set as absolute, computed per benchmark |
-| **Relative** | Excess return, tracking error, beta, rolling 12M beta, hit-rate, correlation |
-
-### 4. Persistence
-
-| Output | Description |
-|--------|-------------|
-| `Output/Performance.csv` | Latest performance snapshot |
-| `Output/Characteristic.csv` | Latest exposure snapshot |
-| `Output/Holdings.csv` | Latest holdings snapshot |
-| `All_Perf_MetricsYYYY.csv` | Power BI metrics feed — one row per instrument × window × metric |
-| `All Perf Metrics Hist/` | Frozen, immutable historical archive |
-
----
-
-## Validation & QA
-
-| Check | How |
-|-------|-----|
-| **Exposure header regression** | `validate_exposure_header_classification.py` asserts header parsing matches a known baseline |
-| **Fund auto-rename detection** | `corr_threshold_validation.py` merges fund identities with correlation > 0.90 over overlapping windows |
-| **Snapshot diffs** | `automation_pipeline.py` logs newly added or missing funds, exposures, and holdings vs the previous run |
-| **No look-ahead enforcement** | All calculations use only data available at or before time τ |
-
----
-
-## Folder Structure
-
-```
-/Input/                                      # Raw Morningstar feeds
-/Output/                                     # Latest tidy snapshots
-/Hist/                                       # Frozen historical files
-/Reporting Docs/                             # Benchmark mapping & config files
-automation_pipeline.py                       # Main ETL orchestration
-performance_analytics.py                     # Metrics calculation engine
-backfill_performance_metrics.py              # Historical backfill
-corr_threshold_validation.py                 # Name-change detection & merge
-validate_exposure_header_classification.py   # Exposure header regression test
+```mermaid
+flowchart LR
+    A[Performance and holdings files] --> B[Normalize and consolidate]
+    B --> C[Quality controls]
+    C --> D[Risk and return analytics]
+    D --> E[Current CSV snapshots]
+    D --> F[Historical archive]
+    E --> G[Power BI]
 ```
 
----
+## Project structure
 
-## Getting Started
+| Path | Purpose |
+|---|---|
+| [`automation_pipeline.py`](automation_pipeline.py) | Main ETL orchestration and current-period metrics |
+| [`performance_analytics.py`](performance_analytics.py) | Vectorized absolute, benchmark, and relative analytics |
+| [`backfill_performance_metrics.py`](backfill_performance_metrics.py) | Historical no-look-ahead rebuild |
+| [`corr_threshold_validation.py`](corr_threshold_validation.py) | Correlation-threshold statistical validation |
+| [`validate_exposure_header_classification.py`](validate_exposure_header_classification.py) | Exposure taxonomy regression check |
 
-**Requirements:** Python 3.10+
+## Expected data layout
+
+```text
+<root>/
+├── 01_MorningStar/
+│   ├── 01_Daily/
+│   ├── 02_Monthly/
+│   └── Output/
+└── Reporting Docs/
+    └── Benchmark_Mapping.xlsx
+```
+
+The benchmark workbook must contain `Benchmark` and `Output Metric` sheets. Vendor-specific subfolders and filenames are documented in the parser configuration inside `automation_pipeline.py`.
+
+## Quick start
 
 ```bash
-pip install pandas numpy openpyxl scipy python-dateutil
+git clone https://github.com/tiagoslantunes/Streamlining-Data-Reporting-Processes.git
+cd Streamlining-Data-Reporting-Processes
+python -m venv .venv
+python -m pip install -r requirements.txt
+
+python automation_pipeline.py --root /path/to/reporting-root
 ```
 
-**Run the full pipeline:**
+Alternatively, configure the root once:
 
 ```bash
+export FUND_REPORTING_ROOT=/path/to/reporting-root
 python automation_pipeline.py
 ```
 
-**Backfill historical metrics:**
+PowerShell: `$env:FUND_REPORTING_ROOT = "C:\path\to\reporting-root"`.
+
+## Historical backfill
+
+Run the backfill after the main pipeline has produced `Performance.csv`:
 
 ```bash
-python backfill_performance_metrics.py
+python backfill_performance_metrics.py --root /path/to/reporting-root
 ```
 
-**Run QA checks:**
+For each month-end, the calculation uses only observations available up to that date. Past years are moved to `Output/All Perf Metrics Hist/`.
+
+## Metrics
+
+- Absolute: cumulative return, annualized volatility, Sharpe ratio, drawdown, downside deviation, and positive-month count.
+- Benchmark: the same metrics for up to three configured benchmarks.
+- Relative: excess return, tracking error, beta, rolling beta, hit rate, and correlation.
+- Windows: configurable current, quarterly, yearly, multi-year, and since-inception periods.
+
+## Validation
 
 ```bash
-python validate_exposure_header_classification.py
+python validate_exposure_header_classification.py --root /path/to/reporting-root
 python corr_threshold_validation.py
+python -m unittest discover -s tests -v
 ```
 
----
+The automated GitHub workflow verifies syntax, path-agnostic imports, CLI entry points, and deterministic helper behavior without requiring confidential source files.
 
-## Dependencies
+## Limitations
 
-| Package | Purpose |
-|---------|---------|
-| `pandas >= 2.0` | Data manipulation and I/O |
-| `numpy >= 1.24` | Vectorized metric calculations |
-| `openpyxl` | Excel file parsing |
-| `scipy` | Pearson correlation |
-| `python-dateutil` | Flexible date parsing |
+- Input layouts are vendor-specific and may require parser updates when exports change.
+- The correlation rename heuristic is a control aid, not a substitute for authoritative security identifiers.
+- Operational deployment still needs scheduling, access controls, monitoring, and governed data retention.
+- Metrics are examples for analytics/reporting and do not constitute investment advice.
 
----
+## Author
 
-## Roadmap
+Tiago Antunes
 
-- Parallel ingestion for large datasets
-- Config-driven metric selection (YAML/TOML)
-- Direct API ingestion from Morningstar
+## License
+
+The original code and documentation are shared for portfolio viewing under an all-rights-reserved notice. See [LICENSE](LICENSE).

@@ -33,7 +33,7 @@ jobs:
         run: |
           python automation_pipeline.py --help
           python backfill_performance_metrics.py --help
-          python validate_exposure_header_classification.py --help
+          python scripts/validate_exposure_header_classification.py --help
 
       - name: Run tests
         run: python -m unittest discover -s tests -v

@@ -1,19 +1,31 @@
-# Fund Reporting ETL and Analytics
+<div align="center">
 
-<p align="center">
-  <strong>Turn heterogeneous fund data into auditable, Power BI-ready reporting datasets.</strong><br>
-  Extraction, normalization, risk/return analytics, historical backfills, and validation controls.
-</p>
+# Fund Reporting ETL
 
-<p align="center">
-  <a href="https://www.python.org/"><img alt="Python" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white"></a>
-  <a href="https://github.com/tiagoslantunes/Streamlining-Data-Reporting-Processes/actions/workflows/quality.yml"><img alt="Quality checks" src="https://github.com/tiagoslantunes/Streamlining-Data-Reporting-Processes/actions/workflows/quality.yml/badge.svg"></a>
-  <img alt="Output" src="https://img.shields.io/badge/output-Power%20BI%20ready-F2C811?logo=powerbi&logoColor=black">
-</p>
+**Turn heterogeneous fund data into auditable, Power BI-ready reporting datasets.**
+Extraction &middot; normalization &middot; risk/return analytics &middot; historical backfills &middot; validation controls.
+
+[![Quality checks](https://github.com/tiagoslantunes/fund-reporting-etl/actions/workflows/quality.yml/badge.svg)](https://github.com/tiagoslantunes/fund-reporting-etl/actions/workflows/quality.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![pandas](https://img.shields.io/badge/pandas-data_layer-150458?logo=pandas&logoColor=white)](https://pandas.pydata.org/)
+[![Output](https://img.shields.io/badge/output-Power_BI_ready-F2C811?logo=powerbi&logoColor=black)](#metrics)
+[![License: MIT](https://img.shields.io/badge/license-MIT-3DA639)](LICENSE)
+
+</div>
 
 This project replaces manual consolidation of performance, volatility, exposure, and holdings files with a reproducible pipeline. It preserves missing-data evidence, enforces no look-ahead in historical metrics, and keeps immutable snapshots for auditability.
 
-> Source files are not included because they may be licensed or confidential. The repository contains the generic processing and validation logic only.
+> [!NOTE]
+> Source files are not included because they may be licensed or confidential. The repository
+> contains the generic processing and validation logic only.
+
+## Highlights
+
+- Vendor-agnostic extraction of CSV/XLSX layouts with flexible date parsing.
+- Absolute, benchmark-relative, and rolling risk/return metrics in one vectorized engine.
+- Historical backfill that uses only data available at each month-end — no look-ahead.
+- Header-drift and identity-change detection before numbers reach a report.
+- Immutable snapshots kept alongside the current outputs for audit trails.
 
 ## Capabilities
 
@@ -42,8 +54,8 @@ flowchart LR
 | [`automation_pipeline.py`](automation_pipeline.py) | Main ETL orchestration and current-period metrics |
 | [`performance_analytics.py`](performance_analytics.py) | Vectorized absolute, benchmark, and relative analytics |
 | [`backfill_performance_metrics.py`](backfill_performance_metrics.py) | Historical no-look-ahead rebuild |
-| [`corr_threshold_validation.py`](corr_threshold_validation.py) | Correlation-threshold statistical validation |
-| [`validate_exposure_header_classification.py`](validate_exposure_header_classification.py) | Exposure taxonomy regression check |
+| [`scripts/`](scripts) | Standalone validation utilities |
+| [`tests/`](tests) | Deterministic helper tests that need no source data |
 
 ## Expected data layout
 
@@ -62,8 +74,8 @@ The benchmark workbook must contain `Benchmark` and `Output Metric` sheets. Vend
 ## Quick start
 
 ```bash
-git clone https://github.com/tiagoslantunes/Streamlining-Data-Reporting-Processes.git
-cd Streamlining-Data-Reporting-Processes
+git clone https://github.com/tiagoslantunes/fund-reporting-etl.git
+cd fund-reporting-etl
 python -m venv .venv
 python -m pip install -r requirements.txt
 
@@ -99,12 +111,9 @@ For each month-end, the calculation uses only observations available up to that 
 ## Validation
 
 ```bash
-python validate_exposure_header_classification.py --root /path/to/reporting-root
-python corr_threshold_validation.py
-python -m unittest discover -s tests -v
+python scripts/validate_exposure_header_classification.py --root /path/to/reporting-root
+python scripts/corr_threshold_validation.py
 ```
-
-The automated GitHub workflow verifies syntax, path-agnostic imports, CLI entry points, and deterministic helper behavior without requiring confidential source files.
 
 ## Limitations
 
@@ -113,10 +122,24 @@ The automated GitHub workflow verifies syntax, path-agnostic imports, CLI entry 
 - Operational deployment still needs scheduling, access controls, monitoring, and governed data retention.
 - Metrics are examples for analytics/reporting and do not constitute investment advice.
 
+## Quality checks
+
+Every push runs [`quality.yml`](.github/workflows/quality.yml) on GitHub Actions: dependency
+install, a syntax check, CLI smoke tests, and the test suite — none of which need confidential
+source files. To run the same checks locally:
+
+```bash
+python -m compileall -q .
+python automation_pipeline.py --help
+python backfill_performance_metrics.py --help
+python scripts/validate_exposure_header_classification.py --help
+python -m unittest discover -s tests -v
+```
+
 ## Author
 
 Tiago Antunes
 
 ## License
 
-The original code and documentation are shared for portfolio viewing under an all-rights-reserved notice. See [LICENSE](LICENSE).
+Released under the [MIT License](LICENSE).

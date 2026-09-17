@@ -19,6 +19,12 @@ This project replaces manual consolidation of performance, volatility, exposure,
 > Source files are not included because they may be licensed or confidential. The repository
 > contains the generic processing and validation logic only.
 
+## Start here
+
+Review [performance_analytics.py](performance_analytics.py) for the metric engine and
+[tests/](tests) for checks that run without vendor files. The complete ETL requires
+the input layout described below; a fresh clone does not include a runnable source dataset.
+
 ## Highlights
 
 - Vendor-agnostic extraction of CSV/XLSX layouts with flexible date parsing.
@@ -77,6 +83,8 @@ The benchmark workbook must contain `Benchmark` and `Output Metric` sheets. Vend
 git clone https://github.com/tiagoslantunes/fund-reporting-etl.git
 cd fund-reporting-etl
 python -m venv .venv
+# macOS/Linux: source .venv/bin/activate
+# PowerShell: .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 
 python automation_pipeline.py --root /path/to/reporting-root
